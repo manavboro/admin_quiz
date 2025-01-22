@@ -1,4 +1,4 @@
-import 'package:admin_quiz/db_constant.dart';
+import 'package:admin_quiz/UTILS/db_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -54,12 +54,15 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
           .doc(_selectedTopicId)
           .collection(db_question)
           .doc();
+
       final questionId = docRef.id;
+
       await FirebaseFirestore.instance
           .collection(db_subjects)
           .doc(_selectedTopicId)
           .collection(db_question)
-          .add({
+          .doc(questionId)
+          .set({
         'id': questionId,
         'question': _questionController.text.trim(),
         'options': options,

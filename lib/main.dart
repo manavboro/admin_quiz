@@ -1,68 +1,56 @@
-import 'package:admin_quiz/pages/login.dart';
-import 'package:admin_quiz/pages/subjects_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'admin_home_page.dart';
 import 'firebase_options.dart';
+import 'pages/login.dart';
+import 'pages/subjects_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Enable Firestore offline persistence
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Enable Firestore Offline persistence
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true, // Enabling offline persistence
-    cacheSizeBytes:
-        Settings.CACHE_SIZE_UNLIMITED, // Optional: Increase cache size
-  );
+  // Lock orientation to portrait
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(ProviderScope(child: MyApp())); // Wrap the app with ProviderScope
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Admin App',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: FutureBuilder(
-            future: _checkLoginStatus(),
-            builder: (ctx, snapshoot) {
-              if (snapshoot.connectionState == ConnectionState.done) {
-                final bool result = snapshoot.data as bool;
-                if (result) {
-                return  SubjectListPage();
-                } else {
-                return  LoginPage();
-                }
-              }
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }));
+      debugShowCheckedModeBanner: false,
+      title: 'Admin App',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: FutureBuilder<bool>(
+        future: _checkLoginStatus(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return snapshot.data == true ? const SubjectListPage() : LoginPage();
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
   }
 
   Future<bool> _checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? email = prefs.getString('email');
-
-    if (email != null) {
-      return true;
-    }
-    return false; // No user logged in
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('email');
   }
 }

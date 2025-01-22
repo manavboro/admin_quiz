@@ -1,4 +1,4 @@
-import 'package:admin_quiz/admin_home_page.dart';
+import 'package:admin_quiz/pages/admin_home_page.dart';
 import 'package:admin_quiz/pages/registration_page.dart';
 import 'package:admin_quiz/pages/subjects_screen.dart';
 import 'package:bcrypt/bcrypt.dart';

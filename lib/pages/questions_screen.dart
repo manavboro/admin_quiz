@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:admin_quiz/app_colors.dart';
-import 'package:admin_quiz/db_constant.dart';
+import 'package:admin_quiz/UTILS/app_colors.dart';
+import 'package:admin_quiz/UTILS/db_constant.dart';
 import 'package:admin_quiz/pages/edit_question_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../create_quiz_screen.dart';
+import 'create_quiz_screen.dart';
 import '../models/topic.dart';
 
 class QuestionsPage extends StatefulWidget {
@@ -51,9 +51,32 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
   // Handle refresh when user pulls down
   Future<void> _onRefresh() async {
-    await _fetchQuestions(widget.topic.id);
+    setState(() {
+
+
+    });
   }
 
+
+  Future<void> deleteQuestion(String topicId, String questionId) async {
+    try {
+      // Reference the question document in Firestore
+      await FirebaseFirestore.instance
+          .collection(db_subjects) // Replace with your collection
+          .doc(topicId) // Topic ID
+          .collection(db_question) // Sub-collection
+          .doc(questionId) // Question ID
+          .delete();
+
+      setState(() {
+
+      });
+      print('Question deleted successfully');
+    } catch (e) {
+      print('Failed to delete question: $e');
+      throw e; // Optionally rethrow to handle in the UI
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,6 +140,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
               itemBuilder: (context, index) {
                 var question = questions[index];
                 return ListTile(
+
                   onTap: () {
                     Navigator.push(
                       context,
@@ -130,7 +154,29 @@ class _QuestionsPageState extends State<QuestionsPage> {
                               )),
                     );
                   },
-                  onLongPress: () {},
+                  onLongPress: ()async {
+                    final confirm = await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Delete Question'),
+                        content: Text('Are you sure you want to delete this question?'),
+                        actions: [
+                          TextButton(
+                            child: Text('Cancel'),
+                            onPressed: () => Navigator.of(context).pop(false),
+                          ),
+                          TextButton(
+                            child: Text('Delete'),
+                            onPressed: () => Navigator.of(context).pop(true),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      deleteQuestion(widget.topic.id,question['id'],);
+                    }
+                  },
                   leading: Text(
                     '${index + 1}',
                     style: TextStyle(fontSize: 20),
